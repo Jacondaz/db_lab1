@@ -1,31 +1,22 @@
 import pandas as pd
+import matplotlib.pyplot as plt
 
-df = pd.read_csv("src/EMP_TEMP_SEX_HOW_NB_A.csv")
+df = pd.read_csv("src/EMP_TEMP_SEX_HOW_EDU_NB_A.csv")
+df = df[['ref_area', 'sex', 'classif1', 'classif2', 'time', 'obs_value']]
+russ_df = df[(df['ref_area'] == 'RUS') & ((df['time'] > 2017) & (df['time'] <= 2022))]
+russ_df = russ_df[(russ_df['sex'] == 'SEX_M') | (russ_df['sex'] == 'SEX_F')]
+russ_df = russ_df[(russ_df['classif1'] == 'HOW_BANDS_H00') | (russ_df['classif1'] == 'HOW_BANDS_H15-29') | (russ_df['classif1'] == 'HOW_BANDS_H30-34') | (russ_df['classif1'] == 'HOW_BANDS_H40-48')]
+russ_df = russ_df[(russ_df['classif2'] == 'EDU_AGGREGATE_BAS') | (russ_df['classif2'] == 'EDU_AGGREGATE_ADV')]
+russ_df = russ_df[['sex', 'classif1', 'classif2', 'time', 'obs_value']]
 
-"""
-ref_area - territory of residence
-indicator - Employment by sex and weekly hours actually worked (thousands) | Annual
-source - source
-sex - sex
-classif1 - Classification of a person by parameter
-time - year of measurement
-obs_value - value(thousands)
-obs_status - Data reliability
-note_classif, note_indicator, note_source - additional notes
-"""
-
-df = df[['ref_area', 'sex', 'classif1', 'time', 'obs_value']]
-russ_df = df[(df['ref_area'] == 'RUS') & (df['time'] == 2022)]
-m_f_hours = russ_df[((russ_df['sex'] == 'SEX_M') | (russ_df['sex'] == 'SEX_F')) & (russ_df['classif1'] == 'HOW_BANDS_TOTAL')]
-m_f_hours_0 = russ_df[((russ_df['sex'] == 'SEX_M') | (russ_df['sex'] == 'SEX_F')) & (russ_df['classif1'] == 'HOW_BANDS_H00')]
-max_hours = russ_df[(russ_df['classif1'] != 'HOW_BANDS_TOTAL') & (russ_df['sex'] != 'SEX_T')].sort_values(by='obs_value', ascending=False)
-russ_df_all_time = df[(df['ref_area'] == 'RUS') & (df['classif1'] != 'HOW_BANDS_TOTAL') & (df['sex'] != 'SEX_T')].sort_values(by='obs_value', ascending=False)
-
-print("Количество мужчин и женщин, которые отработали хотя бы 1 час в неделю")
-print(m_f_hours[['sex', 'time', 'obs_value']])
-print("Количество мужчин и женщин, которые не отработали хотя бы 1 час в неделю")
-print(m_f_hours_0[['sex', 'time', 'obs_value']])
-print("Топ людей по количеству отбработанных часов в неделю за 2022 год")
-print(max_hours)
-print("Топ людей по количеству отбработанных часов в неделю за всё время")
-print(russ_df_all_time[:10])
+russ_df = russ_df[(russ_df['classif1'] == 'HOW_BANDS_H40-48')]
+russ_df['classif2'] = russ_df['classif2'].replace('EDU_AGGREGATE_BAS', 'Базовое образование')
+russ_df['classif2'] = russ_df['classif2'].replace('EDU_AGGREGATE_ADV', 'Продвинутое образование')
+russ_df = russ_df[(russ_df['sex'] == 'SEX_M')]
+pivot = russ_df.pivot_table(values='obs_value', index='time', columns='classif2')
+pivot.plot(title='Hours_band_men', kind='bar', logy=False, subplots=False)
+plt.xlabel("time")
+plt.ylabel("values")
+plt.rc('font', size=10)
+plt.show()
+print(russ_df)
